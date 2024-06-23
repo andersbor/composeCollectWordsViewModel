@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -34,17 +33,24 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.collectwordsviewmodel.ui.theme.CollectWordsViewModelTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             CollectWordsViewModelTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    val viewModel = WordsViewModel()
-                    CollectWords(modifier = Modifier.padding(innerPadding), viewModel = viewModel)
+                    val viewModel : WordsViewModel= viewModel() // persistence
+                    CollectWords(modifier = Modifier.padding(innerPadding),
+                        words = viewModel.words.observeAsState().value,
+                        onAdd = { word -> viewModel.add(word) },
+                        onRemove = { word -> viewModel.remove(word) },
+                        onClear = { viewModel.clear() }
+                    )
                 }
             }
         }
@@ -52,14 +58,19 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun CollectWords(modifier: Modifier = Modifier, viewModel: WordsViewModel) {
+fun CollectWords(
+    words: List<String>?,
+    modifier: Modifier = Modifier,
+    onAdd: (String) -> Unit = {},
+    onRemove: (String) -> Unit = {},
+    onClear: () -> Unit = {}
+) {
     // Add to gradle file
     // https://tigeroakes.com/posts/mutablestateof-list-vs-mutablestatelistof/
-    val words = viewModel.words.observeAsState()
+    // val words = viewModel.words.observeAsState()
     var word by remember { mutableStateOf("") }
     var result by remember { mutableStateOf("") }
     var showList by remember { mutableStateOf(true) }
-    val delete: (String) -> Unit = { viewModel.remove(it) }
 
     Column(modifier = modifier) {
         Text(text = "Collect words", style = MaterialTheme.typography.headlineLarge)
@@ -75,19 +86,17 @@ fun CollectWords(modifier: Modifier = Modifier, viewModel: WordsViewModel) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(onClick = {
-                viewModel.add(word)
-            }) {
+            Button(onClick = { onAdd(word) }) {
                 Text("Add")
             }
             Button(onClick = {
-                viewModel.clear()
+                onClear()
                 word = ""
                 result = ""
             }) {
                 Text("Clear")
             }
-            Button(onClick = { result = viewModel.toString() }) {
+            Button(onClick = { result = words.toString() }) {
                 Text("Show")
             }
         }
@@ -105,9 +114,13 @@ fun CollectWords(modifier: Modifier = Modifier, viewModel: WordsViewModel) {
             Switch(checked = showList, onCheckedChange = { showList = it })
         }
         if (showList) {
-            LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                items(words.value ?: emptyList()) { wo ->
-                    Text(wo, modifier = Modifier.clickable { viewModel.remove(wo) })
+            if (words.isNullOrEmpty()) {
+                Text("No words")
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    items(words) { word: String ->
+                        Text(word, modifier = Modifier.clickable { onRemove(word) })
+                    }
                 }
             }
         }
@@ -118,6 +131,6 @@ fun CollectWords(modifier: Modifier = Modifier, viewModel: WordsViewModel) {
 @Composable
 fun CollectWordsPreview() {
     CollectWordsViewModelTheme {
-        CollectWords(viewModel = WordsViewModel())
+        CollectWords(words = listOf("Hello", "World"))
     }
 }
