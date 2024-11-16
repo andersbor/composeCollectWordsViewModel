@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.example.collectwordsviewmodel"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.collectwordsviewmodel"
@@ -66,11 +66,8 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-
     implementation(libs.androidx.runtime.livedata)
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
-
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
 }

@@ -45,6 +45,8 @@ class MainActivity : ComponentActivity() {
             CollectWordsViewModelTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val viewModel : WordsViewModel= viewModel() // persistence
+                    // viewModel.words = MutableLiveData(listOf<String>())
+                    // Not legal, due to "private set"
                     CollectWords(modifier = Modifier.padding(innerPadding),
                         words = viewModel.words.observeAsState().value,
                         onAdd = { word -> viewModel.add(word) },
